@@ -1,0 +1,141 @@
+class Triangle {
+    constructor (){
+        this.type = 'triangle';
+        this.position = [0.0, 0.0, 0.0];
+        this.color = [1.0, 1.0, 1.0, 1.0];
+        this.size = 5.0;
+
+        this.v1 = [0, 0];
+        this.v2 = [1, 0];
+        this.v3 = [0, 1];
+    }
+
+    setVertices(v1, v2, v3) {
+        this.v1 = v1;
+        this.v2 = v2;
+        this.v3 = v3;
+    }
+  
+    render(){
+        var xy = this.position;
+        var rgba = this.color;
+        var size = this.size;
+
+        // Pass the color of a point to u_FragColor variable
+        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+
+        // Pass the size of a point to u_Size variable
+        gl.uniform1f(u_Size, size);
+
+        // Draw
+        var d = this.size / 200.0;
+        let vertices = [
+            xy[0] + this.v1[0] * d, xy[1] + this.v1[1] * d,
+            xy[0] + this.v2[0] * d, xy[1] + this.v2[1] * d,
+            xy[0] + this.v3[0] * d, xy[1] + this.v3[1] * d
+        ];
+        drawTriangle(vertices);
+    }
+}
+
+
+function drawTriangle(vertices) {
+
+    var n = 3; // The number of vertices
+  
+    // Create a buffer object
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+    }
+  
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+    // Write date into the buffer object
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+  
+    // Assign the buffer object to a_Position variable
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0);
+  
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Position);
+  
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+}
+
+function drawTriangle3D(vertices) {
+
+    var n = 3; // The number of vertices
+  
+    // Create a buffer object
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+    }
+  
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+    // Write date into the buffer object
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+  
+    // Assign the buffer object to a_Position variable
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+  
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Position);
+  
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+}
+
+function drawTriangle3DUV(vertices, uv) {
+    var n = 3; // The number of vertices
+  
+    // Create a buffer object for positions
+    // ------------------------------------
+    var vertexBuffer = gl.createBuffer();
+    if (!vertexBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+    }
+  
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+
+    // Write date into the buffer object
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.DYNAMIC_DRAW);
+  
+    // Assign the buffer object to a_Position variable
+    gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0);
+  
+    // Enable the assignment to a_Position variable
+    gl.enableVertexAttribArray(a_Position);
+
+    // Create a buffer object for UV texture coordinates
+    // -------------------------------------------------
+    var uvBuffer = gl.createBuffer();
+    if (!uvBuffer) {
+      console.log('Failed to create the buffer object');
+      return -1;
+    }
+
+    // Bind the buffer object to target
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
+
+    // Write date into the buffer object    
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(uv), gl.DYNAMIC_DRAW);
+
+    // Assign the buffer object to a_TexCoord variable
+    gl.vertexAttribPointer(a_UV, 2, gl.FLOAT, false, 0, 0);
+    
+    // Enable the assignment to a_TexCoord variable
+    gl.enableVertexAttribArray(a_UV);
+
+    // Draw the triangle
+    // -----------------
+    gl.drawArrays(gl.TRIANGLES, 0, n);
+
+}
