@@ -141,6 +141,7 @@ let g_headAngle = -2; // head rotation angle
 let g_rightArmAngle = 225; // right arm rotation angle
 let g_leftArmAngle = 135; // left arm rotation angle
 let anim = false; // animation flag
+let camera;
 
 // Actions for HTML UI
 function addActionsforHtmlUI(){
@@ -187,6 +188,38 @@ function addActionsforHtmlUI(){
 
 }
 
+function addKeyboardEvents() {
+  document.addEventListener('keydown', (ev) => {
+    switch(ev.code) {
+      case 'KeyW':
+        camera.moveForward();
+        break;
+      case 'KeyS':
+        camera.moveBackwards();
+        break;
+      case 'KeyA':
+        camera.moveLeft();
+        break;
+      case 'KeyD':
+        camera.moveRight();
+        break;
+      case 'KeyQ': 
+        camera.panLeft();
+        break;
+      case 'KeyE': 
+        camera.panRight();
+        break;
+      case 'KeyZ':
+        camera.goUp();
+        break;
+      case 'KeyX':
+        camera.goDown();
+        break;
+    }
+    renderAllShapes();
+  });
+}
+
 function initTextures() {
 
   var image = new Image();
@@ -231,11 +264,12 @@ function sendImageToTEXTURE0(image) {
 }
 
 function main() {
-
+  camera = new Camera();
   setupWebGL();
   connectVariablesToGLSL();
 
   addActionsforHtmlUI();
+  addKeyboardEvents();
 
   initTextures();
 
@@ -293,16 +327,13 @@ function renderAllShapes(){
 
   // Get start time
   var startTime = performance.now();
+  // console.log("View Matrix:", camera.viewMatrix.elements);
+  // console.log("Projection Matrix:", camera.projectionMatrix.elements);
 
   // Set the view matrix
-  var viewMat = new Matrix4();
-  gl.uniformMatrix4fv(u_ViewMatrix, false, viewMat.elements);
+  gl.uniformMatrix4fv(u_ViewMatrix, false, camera.viewMatrix.elements);
+  gl.uniformMatrix4fv(u_ProjectionMatrix, false, camera.projectionMatrix.elements);
 
-  // Set the projection matrix
-  var projMat = new Matrix4();
-  gl.uniformMatrix4fv(u_ProjectionMatrix, false, projMat.elements);
-  
-  // Pass the matrix to the u_ModelMatrix attribute
   var globalRotMat = new Matrix4().rotate(g_globalAngle, 0, 1, 0);
   gl.uniformMatrix4fv(u_GlobalRotateMatrix, false, globalRotMat.elements);
 
@@ -310,6 +341,22 @@ function renderAllShapes(){
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
+  // Floor
+  var floor = new Cube();
+  floor.color = [0.0, 1.0, 0.0, 1.0];
+  floor.textureNum = -2;
+  floor.matrix.translate(0.0, -0.75, 0.0);
+  floor.matrix.scale(10.0, 0.00, 10.0);
+  floor.matrix.translate(-0.5, 0.0, -0.5);
+  floor.render();
+
+  // Sky
+  var sky = new Cube();
+  sky.color = [1.0, 0.0, 0.0, 1.0];
+  sky.textureNum = 0;
+  sky.matrix.scale(50.0, 50.0, 50.0);
+  sky.matrix.translate(-0.5, -0.5, -0.5);
+  sky.render();
 
   var body = new Cube();
   body.color = [0.90, 0.90, 0.90, 1.0];
