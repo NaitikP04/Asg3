@@ -109,6 +109,48 @@ class Camera {
         this.updateViewMatrix();
     }
 
+    panUp(alpha = 5) {
+        var a = new Vector3(this.at.elements);
+        var e = new Vector3(this.eye.elements);
+        var f = a.sub(e);
+
+        // Calculate the horizontal axis (right vector)
+        var right = Vector3.cross(this.up, f);
+        right.normalize();
+
+        // Create a rotation matrix around the right axis
+        let rotationMatrix = new Matrix4();
+        rotationMatrix.setRotate(-alpha, right.elements[0], right.elements[1], right.elements[2]);
+
+        // Rotate the forward vector
+        let f_prime = rotationMatrix.multiplyVector3(f);
+
+        // Update the look-at point
+        this.at = f_prime.add(this.eye);
+        this.updateViewMatrix();
+    }
+
+    panDown(alpha = 5) {
+        var a = new Vector3(this.at.elements);
+        var e = new Vector3(this.eye.elements);
+        var f = a.sub(e);
+
+        // Calculate the horizontal axis (right vector)
+        var right = Vector3.cross(this.up, f);
+        right.normalize();
+
+        // Create a rotation matrix around the right axis
+        let rotationMatrix = new Matrix4();
+        rotationMatrix.setRotate(alpha, right.elements[0], right.elements[1], right.elements[2]);
+
+        // Rotate the forward vector
+        let f_prime = rotationMatrix.multiplyVector3(f);
+
+        // Update the look-at point
+        this.at = f_prime.add(this.eye);
+        this.updateViewMatrix();
+    }
+
     goUp() {
         this.eye.elements[1] += 0.1;
         this.at.elements[1] += 0.1;
