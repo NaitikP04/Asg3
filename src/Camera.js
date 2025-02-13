@@ -1,8 +1,8 @@
 class Camera {
     constructor() {
-        this.fov = 60; // Field of view
-        this.eye = new Vector3([0, 0, 2]); // Camera position
-        this.at = new Vector3([0, 0, -1]); // Look-at point
+        // this.fov = 60; // Field of view
+        this.eye = new Vector3([0, 0, 0]); // Camera position
+        this.at = new Vector3([0, 0, 1]); // Look-at point
         this.up = new Vector3([0, 1, 0]); // Up vector
         this.viewMatrix = new Matrix4(); // View matrix
         this.projectionMatrix = new Matrix4(); // Projection matrix
@@ -19,10 +19,10 @@ class Camera {
         );
     }
 
-    updateProjectionMatrix() {
+    updateProjectionMatrix(fov = 60) {
         let canvas = document.getElementById('webgl');
         this.projectionMatrix.setPerspective(
-            this.fov, canvas.width / canvas.height, 1, 1000
+            fov, canvas.width / canvas.height, 1, 1000
         );
     }
 

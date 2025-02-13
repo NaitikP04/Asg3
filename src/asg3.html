@@ -80,7 +80,7 @@
   </style>
 </head>
 <body onload="main()">
-  <canvas id="webgl" width="400" height="400">
+  <canvas id="webgl" width="800" height="600">
     Please use a browser that supports "canvas".
   </canvas>
   
@@ -99,19 +99,9 @@
       <span id="angleValue">25</span>
     </div>
     <div class="slider-container">
-      <label for="headSlide">Head Angle</label>
-      <input type="range" min="-45" max="45" value="-2" id="headSlide">
-      <span id="headValue">-2</span>
-    </div>
-    <div class="slider-container">
-      <label for="rightArmSlide">Right Arm Angle</label>
-      <input type="range" min="215" max="260" value="225" id="rightArmSlide">
-      <span id="rightArmValue">225</span>
-    </div>
-    <div class="slider-container">
-      <label for="leftArmSlide">Left Arm Angle</label>
-      <input type="range" min="100" max="140" value="135" id="leftArmSlide">
-      <span id="leftArmValue">135</span>
+      <label for="fovSlide">FOV</label>
+      <input type="range" min="20" max="140" value="60" id="fovSlide">
+      <span id="fovValue">25</span>
     </div>
   </div>
 
