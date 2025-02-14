@@ -21,6 +21,8 @@ var FSHADER_SOURCE =`
   uniform sampler2D u_Sampler0;
   uniform sampler2D u_Sampler1;
   uniform sampler2D u_Sampler2;
+  uniform sampler2D u_Sampler3;
+  uniform sampler2D u_Sampler4;
   uniform int u_whichTexture;
   void main() {
     if (u_whichTexture == -2) {                     // Solid color
@@ -33,6 +35,10 @@ var FSHADER_SOURCE =`
       gl_FragColor = vec4(0.4, 0.4, 0.4, 1.0) * texture2D(u_Sampler1, v_UV);   
     } else if (u_whichTexture == 2) {               // texture 2
       gl_FragColor = vec4(0.4, 0.4, 0.4, 1.0) * texture2D(u_Sampler2, v_UV);   
+    } else if (u_whichTexture == 3) {               // texture 3
+      gl_FragColor = texture2D(u_Sampler3, v_UV);   
+    } else if (u_whichTexture == 4) {               // texture 4
+      gl_FragColor = texture2D(u_Sampler4, v_UV);   
     } else {                                        // Redish for error
       gl_FragColor = vec4(1.0, 0.2, 0.2, 1.0);
     }
@@ -51,23 +57,19 @@ let u_ProjectionMatrix;
 let u_Sampler0;
 let u_Sampler1;
 let u_Sampler2;
+let u_Sampler3;
+let u_Sampler4;
 let u_whichTexture;
+let g_selectedBlockType = 1;
 
+// 32x32 map for the scene
 const g_map = [
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 5, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 5, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 5, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 5, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
@@ -76,13 +78,21 @@ const g_map = [
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 5, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 5, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 5, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 5, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
-  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
+  [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 4, 3, 3, 3, 3, 0, 0, 5, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 1],
   [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 ];
@@ -171,6 +181,18 @@ function connectVariablesToGLSL() {
     return false;
   }
 
+  u_Sampler3 = gl.getUniformLocation(gl.program, 'u_Sampler3');
+  if (!u_Sampler3) {
+    console.log('Failed to get the storage location of u_Sampler');
+    return false;
+  }
+
+  u_Sampler4 = gl.getUniformLocation(gl.program, 'u_Sampler4');
+  if (!u_Sampler4) {
+    console.log('Failed to get the storage location of u_Sampler');
+    return false;
+  }
+
   u_whichTexture = gl.getUniformLocation(gl.program, 'u_whichTexture');
   if (!u_whichTexture) {
     console.log('Failed to get the storage location of u_whichTexture');
@@ -201,9 +223,21 @@ let camera;
 // Actions for HTML UI
 function addActionsforHtmlUI(){
 
+  var audio = new Audio('chickenSfx.mp3');
+  audio.loop = true;
+
   // Animation Button Events
-  document.getElementById('animationOn').onclick = function() {anim = true};
-  document.getElementById('animationOff').onclick = function() {anim = false; g_chickenY = 0; renderAllShapes();};
+  document.getElementById('animationOn').onclick = function() {
+    anim = true;
+    audio.play();
+  };
+  document.getElementById('animationOff').onclick = function() {
+    anim = false; 
+    g_chickenY = 0; 
+    renderAllShapes(); 
+    audio.pause();
+    audio.currentTime = 0;
+  };
 
   // Angle Slider Events
   const angleSlider = document.getElementById('angleSlide');
@@ -360,6 +394,31 @@ function initTextures() {
     sendImageToTEXTURE2(image2);
   };
   image2.src = 'wall.png';
+
+  // tree texture
+  var image3 = new Image();
+  if (!image3) {
+    console.log('Failed to create the image object');
+    return false;
+  }
+  image3.onload = function() {
+    console.log('Image loaded');
+    sendImageToTEXTURE3(image3);
+  };
+  image3.src = 'tree.png';
+
+  //leaf texture
+  var image4 = new Image();
+  if (!image4) {
+    console.log('Failed to create the image object');
+    return false;
+  }
+  image4.onload = function() {
+    console.log('Image loaded');
+    sendImageToTEXTURE4(image4);
+  };
+  image4.src = 'leaf.png';
+
   return true;
 }
 
@@ -436,6 +495,54 @@ function sendImageToTEXTURE2(image) {
 
   // Pass the texture unit 2 to u_Sampler
   gl.uniform1i(u_Sampler2, 2);
+
+  console.log('Texture loaded');
+}
+
+function sendImageToTEXTURE3(image) {
+  var texture = gl.createTexture();
+  if (!texture) {
+    console.log('Failed to create the texture object');
+    return false;
+  }
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
+  // Enable texture unit 3
+  gl.activeTexture(gl.TEXTURE3);
+  // Bind the texture object to the target
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set the texture parameters
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  // Write the image data to the texture object
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+
+  // Pass the texture unit 3 to u_Sampler
+  gl.uniform1i(u_Sampler3, 3);
+
+  console.log('Texture loaded');
+}
+
+function sendImageToTEXTURE4(image) {
+  var texture = gl.createTexture();
+  if (!texture) {
+    console.log('Failed to create the texture object');
+    return false;
+  }
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1); // Flip the image's y axis
+  // Enable texture unit 4
+  gl.activeTexture(gl.TEXTURE4);
+  // Bind the texture object to the target
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+
+  // Set the texture parameters
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  // Write the image data to the texture object
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image);
+
+  // Pass the texture unit 4 to u_Sampler
+  gl.uniform1i(u_Sampler4, 4);
 
   console.log('Texture loaded');
 }
@@ -535,9 +642,46 @@ function drawMap() {
         cube.matrix.translate(x - 10, -1.3, y - 4);
         cube.renderfaster();
       }
+      else if (g_map[x][y] === 5) {
+        for (let i = 0; i < 6; i++) {
+          var cube = new Cube();
+          cube.color = [0.2, 0.8, 0.2, 1];
+          cube.textureNum = 3;
+          cube.matrix.translate(x - 10, -1.3 + i * 0.5, y - 4);
+          cube.renderfaster();
+        }
+        const leafPatterns = [
+          // Bottom layer (3x3, no corners)
+          [
+              [-1, 0], [0, -1], [0, 0], [0, 1], [1, 0]
+          ],
+          // Middle layer (3x3, all blocks)
+          [
+              [-1, -1], [-1, 0], [-1, 1],
+              [0, -1],  [0, 0],  [0, 1],
+              [1, -1],  [1, 0],  [1, 1]
+          ],
+          // Top layer (plus shape)
+          [
+              [0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]
+          ]
+        ];
+        leafPatterns.forEach((pattern, layerIndex) => {
+            pattern.forEach(([dx, dz]) => {
+                var leaves = new Cube();
+                leaves.color = [0.2, 0.8, 0.2, 1];
+                leaves.textureNum = 4;
+                leaves.matrix.translate(
+                    (x + dx) - 10,
+                    -1.3 + 4 * 0.5 + layerIndex * 0.5, 
+                    (y + dz) - 4
+                );
+                leaves.renderfaster();
+            });
+        });
+      }
     }
   }
-  
 }
 
 function drawChicken(parentMatrix) {

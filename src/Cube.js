@@ -148,4 +148,48 @@ class Cube{
         
         drawTriangle3DUV(this.verts, this.uvVerts);
     }
+
+    renderWireframe() {
+        var rgba = this.color;
+        
+        // Pass the texture number 
+        gl.uniform1i(u_whichTexture, -2);
+        
+        // Pass the color
+        gl.uniform4f(u_FragColor, rgba[0], rgba[1], rgba[2], rgba[3]);
+        
+        // Pass the matrix
+        gl.uniformMatrix4fv(u_ModelMatrix, false, this.matrix.elements);
+        
+        const edges = [
+            // Front face
+            0,0,0, 1,0,0,
+            1,0,0, 1,1,0,
+            1,1,0, 0,1,0,
+            0,1,0, 0,0,0,
+            
+            // Back face
+            0,0,1, 1,0,1,
+            1,0,1, 1,1,1,
+            1,1,1, 0,1,1,
+            0,1,1, 0,0,1,
+            
+            // Connecting edges
+            0,0,0, 0,0,1,
+            1,0,0, 1,0,1,
+            1,1,0, 1,1,1,
+            0,1,0, 0,1,1
+        ];
+        
+        const originalMode = gl.getParameter(gl.LINE_WIDTH);
+        
+        gl.lineWidth(1);
+        
+        for (let i = 0; i < edges.length; i += 6) {
+            const lineVerts = edges.slice(i, i + 6);
+            drawLine3D(lineVerts);
+        }
+        
+        gl.lineWidth(originalMode);
+    }
 }
